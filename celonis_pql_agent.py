@@ -49,7 +49,7 @@ class CelonisDocScraper:
             'managing_user_profile': 'https://docs.celonis.com/en/managing-your-user-profile.html',
             'troubleshooting_access_celonis_platform': 'https://docs.celonis.com/en/troubleshooting--access-to-your-celonis-platform.html',
             'release_notes': 'https://docs.celonis.com/en/release-notes.html',
-            'feature_release_types': 'https://docs.celonis.com/en/feature_release_types.html',
+            'feature_release_types': 'https://docs.celonis.com/en/feature-release_types.html',
             'private_public_preview': 'https://docs.celonis.com/en/private-public-preview.html',
             'planned_releases': 'https://docs.celonis.com/en/planned-releases.html',
             'release_notes_1728433': 'https://docs.celonis.com/en/release-notes-1728433.html',
@@ -79,7 +79,7 @@ class CelonisDocScraper:
             'september_2023_release_notes': 'https://docs.celonis.com/en/september-2023-release-notes.html',
             'august_2023_release_notes': 'https://docs.celonis.com/en/august-2023-release-notes.html',
             'july_2023_release_notes': 'https://docs.celonis.com/en/july-2023-release-notes.html',
-            'june_2023_release_notes': 'https://docs.celonis.com/en/june-2023-release-notes.html',
+            'june_2023_release_notes': 'https://docs.celonis.com/en/july-2023-release-notes.html',
             'may_2023_release_notes': 'https://docs.celonis.com/en/may-2023-release-notes.html',
             'april_2023_release_notes': 'https://docs.celonis.com/en/april-2023-release-notes.html',
             'march_2023_release_notes': 'https://docs.celonis.com/en/march-2023-release-notes.html',
@@ -92,11 +92,11 @@ class CelonisDocScraper:
             'september_2022_release_notes': 'https://docs.celonis.com/en/september-2022-release-notes.html',
             'august_2022_release_notes': 'https://docs.celonis.com/en/august-2022-release-notes.html',
             'july_2022_release_notes': 'https://docs.celonis.com/en/july-2022-release-notes.html',
-            'june_2022_release_notes': 'https://docs.celonis.com/en/june-2022-release-notes.html',
+            'june_2022_release_notes': 'https://docs.celonis.com/en/july-2022-release-notes.html',
             'may_2022_release_notes': 'https://docs.celonis.com/en/may-2022-release-notes.html',
             'april_2022_release_notes': 'https://docs.celonis.com/en/april-2022-release-notes.html'
         }
-    
+        
     def scrape_documentation(self, url: str, max_depth: int = 2) -> List[DocumentChunk]:
         """Scrape documentation from a given URL"""
         chunks = []
@@ -146,13 +146,13 @@ class CelonisDocScraper:
                 # Find related links for deeper scraping
                 if depth < max_depth:
                     links = soup.find_all('a', href=True)
-                    for link in links[:10]:  # Limit to prevent infinite scraping
+                    for link in links[:10]: # Limit to prevent infinite scraping
                         href = link['href']
                         if self._is_relevant_link(href, current_url):
                             full_url = urljoin(current_url, href)
                             page_chunks.extend(scrape_page(full_url, depth + 1))
                 
-                time.sleep(1)  # Rate limiting
+                time.sleep(1) # Rate limiting
                 
             except Exception as e:
                 logger.error(f"Error scraping {current_url}: {str(e)}")
@@ -515,8 +515,8 @@ def main():
             
             for doc in recent_docs:
                 st.write(f"📄 **{doc.title}**")
-                st.write(f"   {doc.section}")
-                st.write(f"   *Added: {doc.timestamp.strftime('%Y-%m-%d %H:%M')}*")
+                st.write(f"    {doc.section}")
+                st.write(f"    *Added: {doc.timestamp.strftime('%Y-%m-%d %H:%M')}*")
                 st.write("---")
         else:
             st.info("No documents loaded. Use 'Refresh Documentation' to load data.")
@@ -530,7 +530,7 @@ DATEDIFF(dd, "Table"."Start", "Table"."End")
 
 -- Activity occurrence
 CASE WHEN "Table"."Activity" = 'Create Order' 
-     THEN 1 ELSE 0 END
+      THEN 1 ELSE 0 END
 
 -- Variant analysis
 VARIANT("Table"."Activity")
@@ -621,7 +621,7 @@ def create_initial_knowledge_base(vector_store: VectorStore):
 def refresh_documentation():
     """Refresh documentation from Celonis sources"""
     scraper = CelonisDocScraper()
-    vector_store = VectorStore()
+    vector_store = VectorStore() # This creates a new, empty vector_store object for scraping
     
     all_chunks = []
     
@@ -636,10 +636,15 @@ def refresh_documentation():
             st.error(f"Error scraping {name}: {str(e)}")
     
     if all_chunks:
+        # Before saving, clear the cache for initialize_vector_store
+        # This ensures that when st.rerun() happens, initialize_vector_store
+        # will actually reload the updated pql_knowledge_base.pkl
+        initialize_vector_store.clear() # <--- ADD THIS LINE
+        
         vector_store.add_documents(all_chunks)
         vector_store.save("pql_knowledge_base.pkl")
         st.success(f"Successfully updated knowledge base with {len(all_chunks)} document chunks!")
-        st.rerun()  # Updated from st.experimental_rerun()
+        st.rerun()
     else:
         st.warning("No new content was scraped.")
 
