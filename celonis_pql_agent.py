@@ -328,7 +328,11 @@ class PQLAgent:
     def _generate_answer_with_openai(self, question: str, context: str) -> str:
         """Generate answer using OpenAI API"""
         try:
-            response = openai.ChatCompletion.create(
+            # Updated to use the new OpenAI client
+            from openai import OpenAI
+            client = OpenAI(api_key=self.openai_api_key)
+            
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {
@@ -589,7 +593,7 @@ def refresh_documentation():
         vector_store.add_documents(all_chunks)
         vector_store.save("pql_knowledge_base.pkl")
         st.success(f"Successfully updated knowledge base with {len(all_chunks)} document chunks!")
-        st.experimental_rerun()
+        st.rerun()  # Updated from st.experimental_rerun()
     else:
         st.warning("No new content was scraped.")
 
